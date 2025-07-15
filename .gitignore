@@ -36,7 +36,6 @@ terraform.tfvars.json
 
 *.md
 .git
-.gitignore
 *.tar
 
 
@@ -76,7 +75,7 @@ generated/
 mvnw
 mvnw.cmd
 
-# 🧪 Jenkins
+# Jenkins
 *.log
 *.out
 
