@@ -1,0 +1,95 @@
+# Maven
+**/target/
+!.mvn/wrapper/maven-wrapper.jar
+*.log
+*.class
+*.jar
+*.war
+*.iml
+*.project
+*.classpath
+.settings/
+.idea/
+.DS_Store
+
+!.env.example.openai
+!.env.example.bedrock
+
+*.tfstate
+*.tfstate.backup*
+*.tfstate.backup.*
+.terraform/
+
+*.zip
+
+*.md
+.git
+.gitignore
+*.log
+*.tar
+
+# Jenv
+.java-version
+
+# Eclipse
+.settings/
+.classpath
+.project
+
+# Eclipse and IntelliJ
+*.ipr
+*.iws
+*.bak
+*.swp
+
+# IntelliJ IDEA
+.idea
+*.iml
+
+# Visual Studio Code
+.factorypath
+
+# Branch switching
+generated/
+
+**/.DS_Store
+
+# Maven wrapper
+.mvn/
+mvnw
+mvnw.cmd
+
+# OS
+Thumbs.db
+ehthumbs.db
+
+# Docker
+*.pid
+*.seed
+docker-compose.override.yml
+.env
+.env.*
+.env*
+logs/
+*.log
+
+
+# Virtual environment
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+
+# Python cache
+*.pyc
+*.pyo
+
+# VSCode settings
+.vscode/
+
+# Build output from make
+build/
+
+create-dockerfiles-compose.py
+jenkins/jenkins-install.sh
+jenkins/casc.yaml
