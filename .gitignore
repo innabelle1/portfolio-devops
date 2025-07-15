@@ -90,6 +90,8 @@ __pycache__/
 # Build output from make
 build/
 
-create-dockerfiles-compose.py
 jenkins/jenkins-install.sh
 jenkins/casc.yaml
+
+jenkins_home/
+create-dockerfiles-compose.py
