@@ -15,33 +15,18 @@
 !.env.example.openai
 !.env.example.bedrock
 
-*.key
-*.secret
-*.credentials
-
-#terraform
-.terraform/
 *.tfstate
-*.tfstate.*
-crash.log
-override.tf
-override.tf.json
-terraform.tfvars.json
-*.backup
 *.tfstate.backup*
 *.tfstate.backup.*
-
+.terraform/
 
 *.zip
 
 *.md
 .git
+.gitignore
+*.log
 *.tar
-
-
-logs/
-nohup.out
-
 
 # Jenv
 .java-version
@@ -70,22 +55,15 @@ generated/
 **/.DS_Store
 
 # Maven wrapper
-**/target/
 .mvn/
 mvnw
 mvnw.cmd
-
-# Jenkins
-*.log
-*.out
-
 
 # OS
 Thumbs.db
 ehthumbs.db
 
 # Docker
-**/target/
 *.pid
 *.seed
 docker-compose.override.yml
@@ -115,10 +93,5 @@ build/
 jenkins/jenkins-install.sh
 jenkins/casc.yaml
 
-!jenkins/jenkins-install.example.sh
-!jenkins/casc.example.yaml
-
 jenkins_home/
 create-dockerfiles-compose.py
-!create-dockerfiles-compose.example.py
-
