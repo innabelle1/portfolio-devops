@@ -1,0 +1,103 @@
+services:
+  discovery-server:
+    build:
+      context: ./spring-petclinic-discovery-server
+      dockerfile: Dockerfile
+    container_name: discovery-server
+    ports:
+    - 8761:8761
+    depends_on:
+      config-server:
+        condition: service_healthy
+    healthcheck:
+      test:
+      - CMD
+      - curl
+      - -fhttp://localhost:8761/
+      interval: 10s
+      timeout: 5s
+      retries: 20
+  customers-service:
+    build:
+      context: ./spring-petclinic-customers-service
+      dockerfile: Dockerfile
+    container_name: customers-service
+    ports:
+    - 8081:8081
+    depends_on:
+      config-server:
+        condition: service_healthy
+      discovery-server:
+        condition: service_healthy
+  visits-service:
+    build:
+      context: ./spring-petclinic-visits-service
+      dockerfile: Dockerfile
+    container_name: visits-service
+    ports:
+    - 8082:8082
+    depends_on:
+      config-server:
+        condition: service_healthy
+      discovery-server:
+        condition: service_healthy
+  vets-service:
+    build:
+      context: ./spring-petclinic-vets-service
+      dockerfile: Dockerfile
+    container_name: vets-service
+    ports:
+    - 8083:8083
+    depends_on:
+      config-server:
+        condition: service_healthy
+      discovery-server:
+        condition: service_healthy
+  genai-service:
+    build:
+      context: ./spring-petclinic-genai-service
+      dockerfile: Dockerfile
+    container_name: genai-service
+    ports:
+    - 8084:8084
+    environment:
+    - OPENAI_API_KEY=${OPENAI_API_KEY}
+    - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+    - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+    - AWS_REGION=${AWS_REGION}
+    - BEDROCK_MODEL_ID=${BEDROCK_MODEL_ID}
+  api-gateway:
+    build:
+      context: ./spring-petclinic-api-gateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    ports:
+    - 8085:8085
+    depends_on:
+      config-server:
+        condition: service_healthy
+      discovery-server:
+        condition: service_healthy
+  admin-server:
+    build:
+      context: ./spring-petclinic-admin-server
+      dockerfile: Dockerfile
+    container_name: admin-server
+    ports:
+    - 9090:9090
+  config-server:
+    build:
+      context: ./spring-petclinic-config-server
+      dockerfile: Dockerfile
+    container_name: config-server
+    ports:
+    - 8888:8888
+    healthcheck:
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8888/
+      interval: 5s
+      timeout: 5s
+      retries: 10

@@ -1,0 +1,14 @@
+apiVersion: k8sgpt.ai/v1alpha1
+kind: Analysis
+metadata:
+  name: spring-petclinic-eks 
+  namespace: default
+spec:
+  namespace: default
+  analyzers:
+    - PodAnalyzer
+    - NodeAnalyzer
+    - EventAnalyzer
+  explain: true
+  provider: openai
+  maxResults: 10

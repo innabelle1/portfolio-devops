@@ -1,0 +1,8 @@
+image:
+  pullPolicy: IfNotPresent
+  repository: 701173654142.dkr.ecr.us-east-1.amazonaws.com/petclinic/admin-server
+  tag: latest
+replicaCount: 1
+service:
+  port: 9090
+  type: ClusterIP

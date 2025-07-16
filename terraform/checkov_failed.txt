@@ -1,0 +1,12 @@
+	FAILED for resource: aws_security_group.node_group_sg
+	FAILED for resource: aws_security_group.node_group_sg
+	FAILED for resource: eks
+	FAILED for resource: eks_node_group
+	FAILED for resource: eks_node_group
+	FAILED for resource: module.ecr.aws_ecr_repository.this
+	FAILED for resource: module.ecr.aws_ecr_repository.this
+	FAILED for resource: aws_security_group.eks_node_group_sg
+	FAILED for resource: aws_security_group.eks_node_group_sg
+	FAILED for resource: eks
+	FAILED for resource: module.vpc.aws_subnet.public[0]
+	FAILED for resource: module.vpc.aws_subnet.public[1]

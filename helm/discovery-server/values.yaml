@@ -1,0 +1,8 @@
+image:
+  pullPolicy: IfNotPresent
+  repository: 701173654142.dkr.ecr.us-east-1.amazonaws.com/petclinic/discovery-server
+  tag: latest
+replicaCount: 1
+service:
+  port: 8761
+  type: ClusterIP
