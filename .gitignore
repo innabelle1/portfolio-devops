@@ -14,6 +14,8 @@
 
 !.env.example.openai
 !.env.example.bedrock
+# Allow lockfile
+!terraform.lock.hcl
 
 *.tfstate
 *.tfstate.backup*

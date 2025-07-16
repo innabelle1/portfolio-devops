@@ -15,6 +15,7 @@ services = {
 }
 
 base_dir = Path("helm")
+base_dir.mkdir(parents=True, exist_ok=True)
 
 # === Generate Makefile 
 makefile_path = base_dir / "Makefile"
@@ -112,3 +113,5 @@ spec:
 """
     with open(templates_path / "service.yaml", "w") as f:
         f.write(service_yaml)
+
+print(f"Created Charts, values, deployment, service")

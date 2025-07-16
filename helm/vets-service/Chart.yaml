@@ -1,0 +1,4 @@
+apiVersion: v2
+appVersion: '1.0'
+name: vets-service
+version: 0.1.0
