@@ -1,0 +1,17 @@
+git
+credentials
+plain-credentials
+credentials-binding
+aws-credentials
+ssh-credentials
+docker-commons
+workflow-aggregator
+blueocean
+docker-plugin
+amazon-ecr
+kubernetes
+pipeline-stage-view
+workflow-multibranch
+pipeline-github-lib
+cloudbees-folder
+configuration-as-code
