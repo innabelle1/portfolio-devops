@@ -97,3 +97,4 @@ jenkins/casc.yaml
 
 jenkins_home/
 create-dockerfiles-compose.py
+terraform/terraform.tfstate.1750353628.backup

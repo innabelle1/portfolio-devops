@@ -28,11 +28,6 @@ output "eks_cluster_ca" {
   value       = module.eks.cluster_certificate_authority_data
 }
 
-#output "ecr_url" {
- # description = "ECR repository URL"
-  #value       = module.ecr.repository_url
-#}
-
 output "node_group_sg" {
   value = aws_security_group.node_group_sg.id
 }

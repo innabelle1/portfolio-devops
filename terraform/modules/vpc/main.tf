@@ -19,5 +19,4 @@ resource "aws_subnet" "public" {
     Name        = "${var.project_name}-public-${count.index}"
     Environment = var.environment
   }
-#  tags = var.tags
 }

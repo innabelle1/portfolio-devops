@@ -1,50 +1,49 @@
 #!/bin/bash
 set -e
 
-echo "🚨 Удаление всех DevOps-ресурсов AWS начато..."
 
-### Удаление EKS кластеров
-echo "🧹 Удаление EKS кластеров..."
+#------------ delete EKS clusters
+echo "Delete EKS clusters."
 EKS_CLUSTERS=$(aws eks list-clusters --query "clusters[]" --output text)
 for CLUSTER in $EKS_CLUSTERS; do
   aws eks delete-cluster --name "$CLUSTER"
-  echo "✅ EKS кластер $CLUSTER удалён"
+  echo "EKS cluster $CLUSTER is deleted."
 done
 
-### Удаление ECR репозиториев
-echo "🧹 Удаление ECR репозиториев..."
+#------ Delete ECR repository
+echo "Delete ECR repository."
 REPOS=$(aws ecr describe-repositories --query "repositories[].repositoryName" --output text)
 for REPO in $REPOS; do
   aws ecr delete-repository --repository-name "$REPO" --force
-  echo "✅ ECR репозиторий $REPO удалён"
+  echo "ECR repository $REPO is deleted."
 done
 
-### Удаление KMS ключей (все Customer-managed)
-echo "🧹 Удаление KMS ключей и alias..."
+#--------- Delete KMS keys 
+echo "Delete KMS keys and alias."
 KMS_KEYS=$(aws kms list-keys --query "Keys[].KeyId" --output text)
 for KEY in $KMS_KEYS; do
   ARN=$(aws kms describe-key --key-id "$KEY" --query "KeyMetadata.Arn" --output text)
   ENABLED=$(aws kms describe-key --key-id "$KEY" --query "KeyMetadata.KeyManager" --output text)
   if [[ "$ENABLED" == "CUSTOMER" ]]; then
     aws kms schedule-key-deletion --key-id "$KEY" --pending-window-in-days 7
-    echo "🕓 Запланировано удаление KMS ключа $ARN через 7 дней"
+    echo "Delete KMS keys $ARN in 7 days"
   fi
 done
 
-### Удаление CloudWatch Log Groups
-echo "🧹 Удаление CloudWatch Log Groups..."
+#------- delete CloudWatch Log Groups
+echo "Delete CloudWatch Log Groups..."
 LOG_GROUPS=$(aws logs describe-log-groups --query "logGroups[].logGroupName" --output text)
 for LG in $LOG_GROUPS; do
   aws logs delete-log-group --log-group-name "$LG"
-  echo "✅ Log Group $LG удалён"
+  echo "Log Group $LG is deleted."
 done
 
-### Удаление всех VPC и вложенных ресурсов (не default)
-echo "🧹 Удаление пользовательских VPC..."
+#--------- delete all VPC 
+echo "Delete VPC."
 VPC_IDS=$(aws ec2 describe-vpcs --query "Vpcs[?IsDefault==\`false\`].VpcId" --output text)
 
 for VPC_ID in $VPC_IDS; do
-  echo "🔎 Удаление ресурсов VPC: $VPC_ID"
+  echo "Delete VPC: $VPC_ID"
 
   # Internet Gateways
   IGW_IDS=$(aws ec2 describe-internet-gateways --filters Name=attachment.vpc-id,Values=$VPC_ID --query "InternetGateways[].InternetGatewayId" --output text)
@@ -78,16 +77,15 @@ for VPC_ID in $VPC_IDS; do
   done
 
   # Delete Load Balancers (ALB, NLB)
-  echo "🧹 Удаление Load Balancers..."
+  echo "Delete Load Balancers..."
   LBS=$(aws elbv2 describe-load-balancers --query "LoadBalancers[?VpcId=='$VPC_ID'].LoadBalancerArn" --output text)
   for LB in $LBS; do
     aws elbv2 delete-load-balancer --load-balancer-arn "$LB"
-    echo "✅ Load Balancer $LB удалён"
+    echo "Load Balancer $LB deleted"
   done
 
-  # Наконец — VPC
+  # VPC
   aws ec2 delete-vpc --vpc-id "$VPC_ID"
-  echo "✅ VPC $VPC_ID удалён"
+  echo "VPC $VPC_ID deleted"
 done
 
-echo "🎉 Все ресурсы DevOps-инфраструктуры AWS удалены!"
