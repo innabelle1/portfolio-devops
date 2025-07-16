@@ -1,0 +1,136 @@
+pipeline {
+  agent any
+
+  parameters {
+    string(name: 'SERVICE_NAME', defaultValue: 'api-gateway', description: 'Name of the microservice')
+    string(name: 'IMAGE_TAG', defaultValue: '', description: 'Leave empty to use BUILD_NUMBER')
+    booleanParam(name: 'SKIP_BUILD', defaultValue: false, description: 'Skip Docker build and push')
+    booleanParam(name: 'SKIP_LINT', defaultValue: true, description: 'Skip Dockerfile & Helm linting')
+  }
+
+  environment {
+    AWS_REGION      = 'us-east-1'
+    ECR_REGISTRY    = '701173654142.dkr.ecr.us-east-1.amazonaws.com'
+    ECR_REPO        = "${ECR_REGISTRY}/petclinic/${params.SERVICE_NAME}"
+    IMAGE_TAG    = "${params.IMAGE_TAG ?: env.BUILD_NUMBER}"
+    HELM_CHART_PATH = "helm/${params.SERVICE_NAME}"
+    SERVICE_DIR  = "spring-petclinic-${params.SERVICE_NAME}"
+    KUBECONFIG      = credentials('kubeconfig')
+  }
+
+  stages {
+
+    stage('Checkout') {
+      steps {
+        git url: 'https://github.com/innabelle1/portfolio-devops.git'
+      }
+    }
+
+    stage('Detect Changes') {
+      when {
+        expression { return !params.SKIP_BUILD }
+      }
+      steps {
+        script {
+          def changes = sh(
+            script: "git diff --name-only HEAD~1 HEAD | grep $SERVICE_DIR || true",
+            returnStdout: true
+          ).trim()
+
+          if (!changes) {
+            echo "No changes detected in $SERVICE_DIR. Skipping Docker build."
+            currentBuild.result = 'SUCCESS'
+            error("Skipping build — no code changes in service")
+          } else {
+            echo "Changes detected in $SERVICE_DIR:\n${changes}"
+          }
+        }
+      }
+    }
+
+    stage('Lint Dockerfile & Helm') {
+      when {
+        expression { return !params.SKIP_LINT }
+      }
+      steps {
+        script {
+          dir("$SERVICE_DIR") {
+            sh "if command -v dockerfilelint; then dockerfilelint Dockerfile || true; fi"
+          }
+          dir("helm/${params.SERVICE_NAME}") {
+            sh "helm lint . || true"
+          }
+        }
+      }
+    }
+
+    stage('Docker Build') {
+      when {
+        expression { return !params.SKIP_BUILD }
+      }
+      steps {
+        dir("$SERVICE_DIR") {
+          script {
+            sh "docker build -t $ECR_REPO:$IMAGE_TAG ."
+          }
+        }
+      }
+    }
+
+    stage('Login to ECR') {
+      when {
+        expression { return !params.SKIP_BUILD }
+      }
+      steps {
+        script {
+          sh "aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY"
+        }
+      }
+    }
+
+    stage('Push to ECR') {
+      when {
+        expression { return !params.SKIP_BUILD }
+      }
+      steps {
+        script {
+          sh "docker push $ECR_REPO:$IMAGE_TAG"
+        }
+      }
+    }
+  }
+
+  stage('Verify ECR Image') {
+      when {
+        expression { return !params.SKIP_BUILD }
+      }
+      steps {
+        script {
+          def check = sh(
+            script: """
+              aws ecr describe-images \
+                --repository-name petclinic/${params.SERVICE_NAME} \
+                --image-ids imageTag=$IMAGE_TAG \
+                --region $AWS_REGION > /dev/null 2>&1
+            """,
+            returnStatus: true
+          )
+          if (check != 0) {
+            error("ECR image petclinic/${params.SERVICE_NAME}:$IMAGE_TAG not found after push!")
+          } else {
+            echo "ECR image verified: petclinic/${params.SERVICE_NAME}:$IMAGE_TAG"
+          }
+        }
+      }
+    }
+  }
+
+  post {
+    failure {
+      echo "Build failed ${params.SERVICE_NAME}"
+    }
+    success {
+      echo "${params.SERVICE_NAME} deployed successfully with tag $IMAGE_TAG"
+    }
+  }
+}
