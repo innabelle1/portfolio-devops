@@ -17,10 +17,13 @@
 # Allow lockfile
 !terraform.lock.hcl
 
+terraform/*.tfstate
 *.tfstate
 *.tfstate.backup*
+terraform/*.tfstate.backup*
 *.tfstate.backup.*
 .terraform/
+terraform/*.tfstate.backup.*
 
 *.zip
 
