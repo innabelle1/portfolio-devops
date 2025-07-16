@@ -9,11 +9,6 @@ variable "map_public_ip_on_launch" {
   default     = false
 }
 
-#variable "private_subnet_cidrs" {
- # type        = list(string)
-  #description = "List of CIDRs for private subnets"
-#}
-
 variable "public_subnet_cidrs" {
   type        = list(string)
   description = "List of CIDRs for public subnets"
@@ -39,15 +34,3 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
-
-#variable "enable_dns_support" {
- # description = "Enable DNS support"
-  #type        = bool
-  #default     = true
-#}
-
-#variable "enable_dns_hostnames" {
- # description = "Enable DNS hostnames"
-  #type        = bool
-  #default     = true
-#}
