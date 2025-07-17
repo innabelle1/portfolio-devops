@@ -1,7 +1,13 @@
-variable "repository_name" {
-  type        = string
-  description = "ECR repository name"
+variable "services" {
+  description = "List of microservices to create ECR repos for"
+  type        = list(string)
 }
+
+
+#variable "repository_name" {
+#  type        = string
+#  description = "ECR repository name"
+#}
 
 variable "project_name" {
   type        = string
