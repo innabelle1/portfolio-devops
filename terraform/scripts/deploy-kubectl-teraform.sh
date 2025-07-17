@@ -5,11 +5,11 @@ set -e
 echo "Run: kubeconfig + terraform"
 
 # kubeconfig
-.infra/terraform/configure-kubectl.sh
+.terraform/configure-kubectl.sh
 
 # init terraform
-cd infra/terraform
+cd terraform
 terraform init
 
 # infra terraform
-.infra/terraform/run-terraform.sh
+.terraform/run-terraform.sh

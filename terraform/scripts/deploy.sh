@@ -2,7 +2,7 @@
 
 set -e
 
-TF_DIR="infra/terraform"
+TF_DIR="terraform"
 CLUSTER_NAME="spring-petclinic-eks"
 REGION="us-east-1"
 

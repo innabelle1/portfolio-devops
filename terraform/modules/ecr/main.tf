@@ -1,5 +1,9 @@
 resource "aws_ecr_repository" "this" {
-  name = var.repository_name
+  #name = var.repository_name
+
+  for_each = toset(var.services)
+
+  name = "petclinic/${each.key}"
 
 
   encryption_configuration {
@@ -14,7 +18,8 @@ resource "aws_ecr_repository" "this" {
   }
 
   tags = {
-    Name        = var.repository_name
+    Name        = each.key
+    #Name        = var.repository_name
     Project     = var.project_name
     Environment = var.environment
   }

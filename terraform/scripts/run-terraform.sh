@@ -8,7 +8,7 @@ set -e
 #LOG_FILE="$LOG_DIR/terraform-$TIMESTAMP.log"
 
 # terraform/main.tf
-TF_DIR="infra/terraform"
+TF_DIR="terraform"
 
 
 #mkdir -p "$LOG_DIR"

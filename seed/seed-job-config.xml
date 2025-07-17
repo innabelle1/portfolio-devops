@@ -1,0 +1,18 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job@2.40">
+  <actions/>
+  <description>Seed job to create Jenkins pipeline jobs from DSL</description>
+  <keepDependencies>false</keepDependencies>
+  <properties/>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.94">
+    <script>
+      jobDsl targets: 'create-jenkins-jobs.groovy',
+             removedJobAction: 'IGNORE',
+             removedViewAction: 'IGNORE',
+             lookupStrategy: 'SEED_JOB'
+    </script>
+    <sandbox>true</sandbox>
+  </definition>
+  <triggers/>
+  <disabled>false</disabled>
+</flow-definition>
