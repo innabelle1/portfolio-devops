@@ -41,12 +41,12 @@ seed_job_config = """\
   <properties/>
   <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.94">
     <script>
-    node {
+    node {{
        jobDsl targets: 'seed/create-jenkins-jobs.groovy',
              removedJobAction: 'IGNORE',
              removedViewAction: 'IGNORE',
              lookupStrategy: 'SEED_JOB'
-    }
+    }}
     </script>
     <sandbox>true</sandbox>
   </definition>
@@ -56,10 +56,11 @@ seed_job_config = """\
 """
 
 # save files
+Path("seed").mkdir(exist_ok=True)
 Path("seed/create-jenkins-jobs.groovy").write_text(dsl_content)
 Path("seed/seed-job-config.xml").write_text(seed_job_config)
 
-# logs 
+# created 
 print("Jenkins DSL and seed job config created:")
 print("- create-jenkins-jobs.groovy: DSL script to generate jobs")
 print("- seed-job-config.xml: XML config for seed job")
