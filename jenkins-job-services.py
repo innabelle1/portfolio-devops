@@ -41,10 +41,12 @@ seed_job_config = """\
   <properties/>
   <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.94">
     <script>
-      jobDsl targets: 'create-jenkins-jobs.groovy',
+    node {
+       jobDsl targets: 'seed/create-jenkins-jobs.groovy',
              removedJobAction: 'IGNORE',
              removedViewAction: 'IGNORE',
              lookupStrategy: 'SEED_JOB'
+    }
     </script>
     <sandbox>true</sandbox>
   </definition>
