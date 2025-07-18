@@ -31,24 +31,40 @@ pipelineJob("petclinic-{name}") {{
   }}
 }}""" for name in services)
 
-# ML- for seed job
-seed_job_config = """\
+# Groovy run like seed pipeline
+seed_pipeline_groovy = """\
+node {
+  jobDsl targets: 'seed/create-jenkins-jobs.groovy',
+         removedJobAction: 'IGNORE',
+         removedViewAction: 'IGNORE',
+         lookupStrategy: 'SEED_JOB'
+}
+"""
+
+# XML seed job from Git
+seed_job_config_xml = """\
 <?xml version='1.1' encoding='UTF-8'?>
 <flow-definition plugin="workflow-job@2.40">
   <actions/>
-  <description>Seed job to create Jenkins pipeline jobs from DSL</description>
+  <description>Seed job to create Jenkins pipeline jobs from Git DSL</description>
   <keepDependencies>false</keepDependencies>
   <properties/>
-  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.94">
-    <script>
-    node {{
-       jobDsl targets: 'seed/create-jenkins-jobs.groovy',
-             removedJobAction: 'IGNORE',
-             removedViewAction: 'IGNORE',
-             lookupStrategy: 'SEED_JOB'
-    }}
-    </script>
-    <sandbox>true</sandbox>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition" plugin="workflow-cps@2.94">
+    <scm class="hudson.plugins.git.GitSCM" plugin="git@5.2.1">
+      <configVersion>2</configVersion>
+      <userRemoteConfigs>
+        <hudson.plugins.git.UserRemoteConfig>
+          <url>https://github.com/innabelle1/portfolio-devops.git</url>
+        </hudson.plugins.git.UserRemoteConfig>
+      </userRemoteConfigs>
+      <branches>
+        <hudson.plugins.git.BranchSpec>
+          <name>*/restore-devops</name>
+        </hudson.plugins.git.BranchSpec>
+      </branches>
+    </scm>
+    <scriptPath>seed/seed-pipeline.groovy</scriptPath>
+    <lightweight>true</lightweight>
   </definition>
   <triggers/>
   <disabled>false</disabled>
@@ -58,9 +74,12 @@ seed_job_config = """\
 # save files
 Path("seed").mkdir(exist_ok=True)
 Path("seed/create-jenkins-jobs.groovy").write_text(dsl_content)
-Path("seed/seed-job-config.xml").write_text(seed_job_config)
+Path("seed/seed-pipeline.groovy").write_text(seed_pipeline_groovy)
+Path("seed/seed-job-config.xml").write_text(seed_job_config_xml)
 
 # created 
 print("Jenkins DSL and seed job config created:")
 print("- create-jenkins-jobs.groovy: DSL script to generate jobs")
-print("- seed-job-config.xml: XML config for seed job")
+print("- seed-job-config.xml: Seed job XML for Jenkins read from Git")
+print(" - seed/seed-pipeline.groovy: Pipeline scripts use like scriptPath in seed job")
+print("Add file to Github & push to branche 'restore-devops'")
