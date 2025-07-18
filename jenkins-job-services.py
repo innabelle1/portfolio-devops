@@ -34,10 +34,12 @@ pipelineJob("petclinic-{name}") {{
 # Groovy run like seed pipeline
 seed_pipeline_groovy = """\
 node {
-  jobDsl targets: 'seed/create-jenkins-jobs.groovy',
-         removedJobAction: 'IGNORE',
-         removedViewAction: 'IGNORE',
-         lookupStrategy: 'SEED_JOB'
+  jobDsl(
+      targets: 'seed/create-jenkins-jobs.groovy',
+      removedJobAction: 'IGNORE',
+      removedViewAction: 'IGNORE',
+      lookupStrategy: 'SEED_JOB'
+  )
 }
 """
 
