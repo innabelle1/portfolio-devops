@@ -43,10 +43,14 @@ pipeline {
   stages {
     stage('Generate Jobs') {
       steps {
-        jobDsl targets: "${env.DSL_SCRIPT_PATH}",
-               removedJobAction: 'IGNORE',
-               removedViewAction: 'IGNORE',
-               lookupStrategy: 'SEED_JOB'
+        script {
+          node {
+            jobDsl targets: "${env.DSL_SCRIPT_PATH}",
+                   removedJobAction: 'IGNORE',
+                   removedViewAction: 'IGNORE',
+                   lookupStrategy: 'SEED_JOB'
+          }
+        }
       }
     }
   }
