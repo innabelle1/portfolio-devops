@@ -33,13 +33,32 @@ pipelineJob("petclinic-{name}") {{
 
 # Groovy run like seed pipeline
 seed_pipeline_groovy = """\
-node {
-  jobDsl(
-      targets: 'seed/create-jenkins-jobs.groovy',
-      removedJobAction: 'IGNORE',
-      removedViewAction: 'IGNORE',
-      lookupStrategy: 'SEED_JOB'
-  )
+pipeline {
+  agent any
+
+  environment {
+    DSL_SCRIPT_PATH = 'seed/create-jenkins-jobs.groovy'
+  }
+
+  stages {
+    stage('Generate Jobs') {
+      steps {
+        jobDsl targets: "${env.DSL_SCRIPT_PATH}",
+               removedJobAction: 'IGNORE',
+               removedViewAction: 'IGNORE',
+               lookupStrategy: 'SEED_JOB'
+      }
+    }
+  }
+
+  post {
+    success {
+      echo "Seed job completed successfully"
+    }
+    failure {
+      echo "Seed job failed"
+    }
+  }
 }
 """
 
