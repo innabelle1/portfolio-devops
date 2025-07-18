@@ -113,7 +113,6 @@ pipeline {{
         }}
       }}
     }}
-  }}
 
   stage('Verify ECR Image') {{
       when {{
