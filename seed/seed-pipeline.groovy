@@ -6,10 +6,9 @@ pipeline {
       steps {
         script {
           jobDsl targets: 'seed/create-jenkins-jobs.groovy',
-                   scriptText: dslScript,
-                   removedJobAction: 'IGNORE',
-                   removedViewAction: 'IGNORE',
-                   lookupStrategy: 'SEED_JOB'
+                 removedJobAction: 'IGNORE',
+                 removedViewAction: 'IGNORE',
+                 lookupStrategy: 'SEED_JOB'
         }
       }
     }
