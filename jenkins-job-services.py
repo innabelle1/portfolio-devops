@@ -22,6 +22,7 @@ pipelineJob("petclinic-{name}") {{
         git {{
           remote {{
             url("https://github.com/innabelle1/portfolio-devops.git")
+            sh 'ls -la seed' // check scripts
           }}
           branches("*/restore-devops")
         }}
@@ -39,12 +40,10 @@ pipeline {
   stages {
     stage('Generate Jobs') {
       steps {
-        script {
           jobDsl targets: 'seed/create-jenkins-jobs.groovy',
                  removedJobAction: 'IGNORE',
                  removedViewAction: 'IGNORE',
                  lookupStrategy: 'SEED_JOB'
-        }
       }
     }
   }
