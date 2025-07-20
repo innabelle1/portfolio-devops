@@ -40,7 +40,7 @@ pipeline {
   stages {
     stage('Generate Jobs') {
       steps {
-          jobDsl targets: 'seed/jenkins-jobs-1.groovy',
+          jobDsl targets: 'seed/jenkins_jobs_1.groovy',
                  removedJobAction: 'IGNORE',
                  removedViewAction: 'IGNORE',
                  lookupStrategy: 'SEED_JOB'
@@ -91,13 +91,13 @@ seed_job_config_xml = """\
 
 # save files
 Path("seed").mkdir(exist_ok=True)
-Path("seed/jenkins-jobs-1.groovy").write_text(dsl_content)
+Path("seed/jenkins_jobs_1.groovy").write_text(dsl_content)
 Path("seed/seed-pipeline.groovy").write_text(seed_pipeline_groovy)
 Path("seed/seed-job-config.xml").write_text(seed_job_config_xml)
 
 # created 
 print("Jenkins DSL and seed job config created:")
-print("- jenkins-jobs-1.groovy: DSL script to generate jobs")
+print("- jenkins_jobs_1.groovy: DSL script to generate jobs")
 print("- seed-job-config.xml: Seed job XML for Jenkins read from Git")
 print(" - seed/seed-pipeline.groovy: Pipeline scripts use like scriptPath in seed job")
 print("Add file to Github & push to branche 'restore-devops'")

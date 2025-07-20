@@ -4,7 +4,7 @@ pipeline {
   stages {
     stage('Generate Jobs') {
       steps {
-          jobDsl targets: 'seed/jenkins-jobs-1.groovy',
+          jobDsl targets: 'seed/jenkins_jobs_1.groovy',
                  removedJobAction: 'IGNORE',
                  removedViewAction: 'IGNORE',
                  lookupStrategy: 'SEED_JOB'
