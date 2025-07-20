@@ -36,20 +36,15 @@ seed_pipeline_groovy = """\
 pipeline {
   agent any
 
-  environment {
-    DSL_SCRIPT_PATH = 'seed/create-jenkins-jobs.groovy'
-  }
-
   stages {
     stage('Generate Jobs') {
       steps {
         script {
-          node {
-            jobDsl targets: "${env.DSL_SCRIPT_PATH}",
+	    def dslScript = readFileFromWorkspace('seed/create-jenkins-jobs.groovy')
+            jobDsl targets: def dslScript,
                    removedJobAction: 'IGNORE',
                    removedViewAction: 'IGNORE',
                    lookupStrategy: 'SEED_JOB'
-          }
         }
       }
     }
