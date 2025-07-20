@@ -22,7 +22,6 @@ pipelineJob("petclinic-{name}") {{
         git {{
           remote {{
             url("https://github.com/innabelle1/portfolio-devops.git")
-            sh 'ls -la seed' // check scripts
           }}
           branches("*/restore-devops")
         }}

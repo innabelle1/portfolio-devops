@@ -6,7 +6,6 @@ pipelineJob("petclinic-config-server") {
         git {
           remote {
             url("https://github.com/innabelle1/portfolio-devops.git")
-            sh 'ls -la seed' // check scripts
           }
           branches("*/restore-devops")
         }
@@ -23,7 +22,6 @@ pipelineJob("petclinic-discovery-server") {
         git {
           remote {
             url("https://github.com/innabelle1/portfolio-devops.git")
-            sh 'ls -la seed' // check scripts
           }
           branches("*/restore-devops")
         }
@@ -40,7 +38,6 @@ pipelineJob("petclinic-customers-service") {
         git {
           remote {
             url("https://github.com/innabelle1/portfolio-devops.git")
-            sh 'ls -la seed' // check scripts
           }
           branches("*/restore-devops")
         }
@@ -57,7 +54,6 @@ pipelineJob("petclinic-visits-service") {
         git {
           remote {
             url("https://github.com/innabelle1/portfolio-devops.git")
-            sh 'ls -la seed' // check scripts
           }
           branches("*/restore-devops")
         }
@@ -74,7 +70,6 @@ pipelineJob("petclinic-vets-service") {
         git {
           remote {
             url("https://github.com/innabelle1/portfolio-devops.git")
-            sh 'ls -la seed' // check scripts
           }
           branches("*/restore-devops")
         }
@@ -91,7 +86,6 @@ pipelineJob("petclinic-genai-service") {
         git {
           remote {
             url("https://github.com/innabelle1/portfolio-devops.git")
-            sh 'ls -la seed' // check scripts
           }
           branches("*/restore-devops")
         }
@@ -108,7 +102,6 @@ pipelineJob("petclinic-api-gateway") {
         git {
           remote {
             url("https://github.com/innabelle1/portfolio-devops.git")
-            sh 'ls -la seed' // check scripts
           }
           branches("*/restore-devops")
         }
@@ -125,7 +118,6 @@ pipelineJob("petclinic-admin-server") {
         git {
           remote {
             url("https://github.com/innabelle1/portfolio-devops.git")
-            sh 'ls -la seed' // check scripts
           }
           branches("*/restore-devops")
         }
