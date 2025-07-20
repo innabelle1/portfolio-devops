@@ -6,10 +6,12 @@ pipeline {
       steps {
         script {
 	    def dslScript = readFileFromWorkspace('seed/create-jenkins-jobs.groovy')
-            jobDsl targets: def dslScript,
+            jobDsl(
+                   scriptText: def dslScript,
                    removedJobAction: 'IGNORE',
                    removedViewAction: 'IGNORE',
                    lookupStrategy: 'SEED_JOB'
+            ) 
         }
       }
     }
