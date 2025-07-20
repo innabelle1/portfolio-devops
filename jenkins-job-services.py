@@ -40,9 +40,10 @@ pipeline {
     stage('Generate Jobs') {
       steps {
         script {
-	    def dslScript = readFileFromWorkspace('seed/create-jenkins-jobs.groovy')
+            def dslScript = readFileFromWorkspace('seed/create-jenkins-jobs.groovy')
+        
             jobDsl(
-                   scriptText: def dslScript,
+                   scriptText: dslScript,
                    removedJobAction: 'IGNORE',
                    removedViewAction: 'IGNORE',
                    lookupStrategy: 'SEED_JOB'
