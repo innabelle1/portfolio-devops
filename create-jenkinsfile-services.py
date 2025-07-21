@@ -47,12 +47,23 @@ pipeline {{
       }}
       steps {{
         script {{
-          def changes = sh(
-            script: "git diff --name-only HEAD~1 HEAD | grep $SERVICE_DIR || true",
+	  def initialCommit = sh(
+            script: "git rev-list --max-parents=0 HEAD",
             returnStdout: true
           ).trim()
 
-          if (!changes) {{
+          def previousCommit = sh(
+            script: "git rev-parse --verify HEAD~1 || echo ${{initialCommit}}",
+            returnStdout: true
+          ).trim()
+
+          def changes = sh(
+            script: "git diff --name-only ${{previousCommit}} HEAD | grep $SERVICE_DIR || true",
+            returnStdout: true
+          ).trim()
+
+
+	  if (!changes) {{
             echo "No changes detected in $SERVICE_DIR. Skipping Docker build."
             currentBuild.result = 'SUCCESS'
             error("Skipping build — no code changes in service")
