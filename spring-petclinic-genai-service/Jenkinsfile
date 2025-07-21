@@ -44,8 +44,6 @@ pipeline {
 
 	  if (!changes && env.BUILD_NUMBER != "1") {
             echo "No changes detected in $SERVICE_DIR. Skipping Docker build."
-            currentBuild.result = 'SUCCESS'
-            error("Skipping build — no code changes in service")
           } else {
             echo "Changes detected or first build. Proceeding with Docker in $SERVICE_DIR:\n${changes}"
           }
