@@ -32,15 +32,9 @@ pipeline {
       }
       steps {
         script {
-	  def initialCommit = sh(
-            script: "git rev-list --max-parents=0 HEAD",
-            returnStdout: true
-          ).trim()
 
-          def previousCommit = sh(
-            script: "git rev-parse --verify HEAD~1 || echo ${initialCommit}",
-            returnStdout: true
-          ).trim()
+          def initialCommit = sh(script: "git rev-list --max-parents=0 HEAD", returnStdout: true).trim()
+          def previousCommit = sh(script: "git rev-parse --verify HEAD~1 || echo ${initialCommit}", returnStdout: true).trim()
 
           def changes = sh(
             script: "git diff --name-only ${previousCommit} HEAD | grep $SERVICE_DIR || true",
@@ -48,12 +42,12 @@ pipeline {
           ).trim()
 
 
-	  if (!changes) {
+	  if (!changes && env.BUILD_NUMBER != "1") {
             echo "No changes detected in $SERVICE_DIR. Skipping Docker build."
             currentBuild.result = 'SUCCESS'
             error("Skipping build — no code changes in service")
           } else {
-            echo "Changes detected in $SERVICE_DIR:\n${changes}"
+            echo "Changes detected or first build. Proceeding with Docker in $SERVICE_DIR:\n${changes}"
           }
         }
       }
