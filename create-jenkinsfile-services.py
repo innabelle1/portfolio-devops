@@ -82,6 +82,16 @@ pipeline {{
       }}
     }}
 
+    stage('Debug Dockerfile') {{
+      steps {{
+        dir("$SERVICE_DIR") {{
+           sh "ls -la"
+        }}
+      }}
+    }}
+
+
+
     stage('Docker Build') {{
       when {{
         expression {{ return !params.SKIP_BUILD }}
