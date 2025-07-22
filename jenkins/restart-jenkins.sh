@@ -1,15 +1,12 @@
 #!/bin/bash
 set -e
 
-echo "Delete previous container."
+echo "Stopping old Jenkins container..."
 docker rm -f jenkins || true
-
-echo "Build Jenkins..."
-docker build -t jenkins-casc .
 
 DOCKER_GID=$(stat -c '%g' /var/run/docker.sock)
 
-echo "Run Jenkins  http://localhost:8080"
+echo "Restarting Jenkins..."
 docker run -d \
   --name jenkins \
   -p 8080:8080 \
@@ -18,11 +15,9 @@ docker run -d \
   --group-add $DOCKER_GID \
   jenkins-casc
 
-sleep 15
-echo "Admin: admin"
-echo "Password: admin123"
+echo "Jenkins restarted → http://localhost:8080"
 
-# Open in browser (WSL2)
+# Auto open in WSL
 if command -v wslview &> /dev/null; then
   wslview http://localhost:8080
 fi
