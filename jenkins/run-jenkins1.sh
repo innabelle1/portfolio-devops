@@ -7,15 +7,12 @@ docker rm -f jenkins || true
 echo "Build Jenkins..."
 docker build -t jenkins-casc .
 
-DOCKER_GID=$(stat -c '%g' /var/run/docker.sock)
-
 echo "Run Jenkins  http://localhost:8080"
 docker run -d \
   --name jenkins \
   -p 8080:8080 \
   -v jenkins_home:/var/jenkins_home \
   -v /var/run/docker.sock:/var/run/docker.sock \
-  --group-add $DOCKER_GID \
   jenkins-casc
 
 sleep 15

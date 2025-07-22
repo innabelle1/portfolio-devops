@@ -4,8 +4,7 @@ pipeline {
   parameters {
     string(name: 'SERVICE_NAME', defaultValue: 'discovery-server', description: 'Name of the microservice')
     string(name: 'IMAGE_TAG', defaultValue: '', description: 'Leave empty to use BUILD_NUMBER')
-    booleanParam(name: 'SKIP_BUILD', defaultValue: false, description: 'Skip Docker build and push')
-    booleanParam(name: 'SKIP_LINT', defaultValue: true, description: 'Skip Dockerfile & Helm linting')
+    string(name: 'DOCKERHUB_REPO', defaultValue: 'innabelle1/spring-petclinic-discovery-server', description: 'DockerHub repo name')
   }
 
   environment {
@@ -13,105 +12,37 @@ pipeline {
     ECR_REGISTRY    = '701173654142.dkr.ecr.us-east-1.amazonaws.com'
     ECR_REPO        = "${ECR_REGISTRY}/petclinic/${params.SERVICE_NAME}"
     IMAGE_TAG       = "${params.IMAGE_TAG ?: env.BUILD_NUMBER}"
-    HELM_CHART_PATH = "helm/${params.SERVICE_NAME}"
-    SERVICE_DIR     = "spring-petclinic-${params.SERVICE_NAME}"
+    DOCKERHUB_REPO  = "${params.DOCKERHUB_REPO}"
   }
 
   stages {
 
-    stage('Checkout') {
-      steps {
-        git branch: 'restore-devops', url: 'https://github.com/innabelle1/portfolio-devops.git'
-      }
-    }
-
-    stage('Detect Changes') {
-      when {
-        expression { return !params.SKIP_BUILD }
-      }
+    stage('Login to DockerHub & ECR') {
       steps {
         script {
-
-          def initialCommit = sh(script: "git rev-list --max-parents=0 HEAD", returnStdout: true).trim()
-          def previousCommit = sh(script: "git rev-parse --verify HEAD~1 || echo ${initialCommit}", returnStdout: true).trim()
-
-          def changes = sh(
-            script: "git diff --name-only ${previousCommit} HEAD | grep $SERVICE_DIR || true",
-            returnStdout: true
-          ).trim()
-
-          def imageExists = sh(
-            script: """
-              aws ecr describe-images \
-                --repository-name petclinic/${params.SERVICE_NAME} \
-                --image-ids imageTag=$IMAGE_TAG \
-                --region $AWS_REGION > /dev/null 2>&1
-            """,
-            returnStatus: true
-          ) == 0
-
-	  if (!changes && env.BUILD_NUMBER != "1") {
-            echo "No changes detected in $SERVICE_DIR. Skipping Docker build."
-            currentBuild.result = 'SUCCESS'
-          } else {
-            echo "Changes detected or first build. Proceeding with Docker in $SERVICE_DIR:\n${changes}"
-          }
-        }
-      }
-    }
-
-    stage('Lint Dockerfile & Helm') {
-      when {
-        expression { return !params.SKIP_LINT }
-      }
-      steps {
-        script {
-          dir("$SERVICE_DIR") {
-            sh "if command -v dockerfilelint; then dockerfilelint Dockerfile || true; fi"
-          }
-          dir("helm/${params.SERVICE_NAME}") {
-            sh "helm lint . || true"
-          }
-        }
-      }
-    }
-
-    stage('Debug Dockerfile') {
-      steps {
-        dir("$SERVICE_DIR") {
-           sh "ls -la"
-        }
-      }
-    }
-
-    stage('Docker Build') {
-      when {
-        expression { return !params.SKIP_BUILD }
-      }
-      steps {
-        dir("$SERVICE_DIR") {
-          script {
-            sh "docker build -t $ECR_REPO:$IMAGE_TAG ."
-          }
-        }
-      }
-    }
-
-    stage('Login to ECR') {
-      when {
-        expression { return !params.SKIP_BUILD }
-      }
-      steps {
-        script {
+          sh "echo ${DOCKERHUB_TOKEN} | docker login -u ${DOCKERHUB_USERNAME} --password-stdin"
           sh "aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY"
         }
       }
     }
 
-    stage('Push to ECR') {
-      when {
-        expression { return !params.SKIP_BUILD }
+    stage('Pull from DockerHub') {
+      steps {
+        script {
+          sh "docker pull $DOCKERHUB_REPO:$IMAGE_TAG"
+        }
       }
+    }
+
+    stage('Tag for ECR') {
+      steps {
+        script {
+          sh "docker tag $DOCKERHUB_REPO:$IMAGE_TAG $ECR_REPO:$IMAGE_TAG"
+        }
+      }
+    }
+
+    stage('Push to ECR') {
       steps {
         script {
           sh "docker push $ECR_REPO:$IMAGE_TAG"
@@ -120,9 +51,6 @@ pipeline {
     }
 
     stage('Verify ECR Image') {
-      when {
-        expression { return !params.SKIP_BUILD }
-      }
       steps {
         script {
           def check = sh(
@@ -133,7 +61,7 @@ pipeline {
             returnStatus: true
           )
           if (check != 0) {
-            error("ECR image petclinic/${params.SERVICE_NAME}:$IMAGE_TAG not found after push!")
+            error("ECR image not found: petclinic/${params.SERVICE_NAME}:$IMAGE_TAG")
           } else {
             echo "ECR image verified: petclinic/${params.SERVICE_NAME}:$IMAGE_TAG"
           }
@@ -144,10 +72,10 @@ pipeline {
 
   post {
     failure {
-      echo "Build failed ${params.SERVICE_NAME}"
+      echo "Failed to sync image for ${params.SERVICE_NAME}"
     }
     success {
-      echo "${params.SERVICE_NAME} deployed successfully with tag $IMAGE_TAG"
+      echo "Image ${params.SERVICE_NAME}:$IMAGE_TAG successfully pushed to ECR"
     }
   }
 }
