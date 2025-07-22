@@ -99,7 +99,11 @@ pipeline {{
       }}
     }}
 
-
+    stage('Maven Build') {{
+         dir("$SERVICE_DIR") {{
+           sh 'mvn clean package -DskipTests'
+         }}
+    }}
 
     stage('Docker Build') {{
       when {{
