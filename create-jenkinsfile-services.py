@@ -1,5 +1,6 @@
 from pathlib import Path
 
+# Список микросервисов
 services = [
     "config-server",
     "discovery-server",
@@ -16,57 +17,63 @@ pipeline {{
   agent any
 
   parameters {{
-    string(name: 'SERVICE_NAME', defaultValue: '{name}', description: 'Microservice name')
-    string(name: 'IMAGE_TAG', defaultValue: 'latest', description: 'Docker image tag to pull from DockerHub')
+    string(name: 'SERVICE_NAME', defaultValue: '{name}', description: 'Name of the microservice')
+    string(name: 'IMAGE_TAG', defaultValue: '', description: 'Leave empty to use BUILD_NUMBER')
   }}
 
   environment {{
-    DOCKERHUB_REPO = "innabelle1/spring-petclinic-${{params.SERVICE_NAME}}"
-    AWS_REGION     = "us-east-1"
-    ECR_REGISTRY   = "701173654142.dkr.ecr.us-east-1.amazonaws.com"
-    ECR_REPO       = "${{ECR_REGISTRY}}/petclinic/${{params.SERVICE_NAME}}"
+    AWS_REGION      = 'us-east-1'
+    ECR_REGISTRY    = '701173654142.dkr.ecr.us-east-1.amazonaws.com'
+    ECR_REPO        = "${{ECR_REGISTRY}}/petclinic/${{params.SERVICE_NAME}}"
+    IMAGE_TAG       = "${{params.IMAGE_TAG ?: env.BUILD_NUMBER}}"
+    LOCAL_IMAGE     = "portfolio-devops-${{params.SERVICE_NAME}}:latest"
   }}
 
   stages {{
-    stage('Pull from DockerHub') {{
+    stage('Checkout') {{
       steps {{
-        sh 'docker pull $DOCKERHUB_REPO:$IMAGE_TAG'
+        git branch: 'restore-devops', url: 'https://github.com/innabelle1/portfolio-devops.git'
+      }}
+    }}
+
+    stage('Tag Local Image for ECR') {{
+      steps {{
+        script {{
+          echo "Tagging $LOCAL_IMAGE -> $ECR_REPO:$IMAGE_TAG"
+          sh "docker tag $LOCAL_IMAGE $ECR_REPO:$IMAGE_TAG"
+        }}
       }}
     }}
 
     stage('Login to ECR') {{
       steps {{
         withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-ecr-creds']]) {{
-          sh '''
-            aws ecr get-login-password --region $AWS_REGION | \
-            docker login --username AWS --password-stdin $ECR_REGISTRY
-          '''
+          sh "aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY"
         }}
-      }}
-    }}
-
-    stage('Tag Local Image for ECR') {{
-      steps {{
-        sh 'docker tag $DOCKERHUB_REPO:$IMAGE_TAG $ECR_REPO:$IMAGE_TAG'
       }}
     }}
 
     stage('Push Image to ECR') {{
       steps {{
-        sh 'docker push $ECR_REPO:$IMAGE_TAG'
+        sh "docker push $ECR_REPO:$IMAGE_TAG"
       }}
     }}
 
     stage('Verify Push') {{
       steps {{
-        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-ecr-creds']]) {{
-          sh '''
-            aws ecr describe-images \
-              --repository-name petclinic/${{params.SERVICE_NAME}} \
-              --image-ids imageTag=$IMAGE_TAG \
-              --region $AWS_REGION > /dev/null 2>&1 || \
-              (echo "ERROR: Image not found in ECR" && exit 1)
-          '''
+        script {{
+          def check = sh(
+            script: \"\"\"aws ecr describe-images \\
+              --repository-name petclinic/${{params.SERVICE_NAME}} \\
+              --image-ids imageTag=$IMAGE_TAG \\
+              --region $AWS_REGION > /dev/null 2>&1\"\"\",
+            returnStatus: true
+          )
+          if (check != 0) {{
+            error("ECR image not found after push: petclinic/${{params.SERVICE_NAME}}:$IMAGE_TAG")
+          }} else {{
+            echo "Image verified in ECR: petclinic/${{params.SERVICE_NAME}}:$IMAGE_TAG"
+          }}
         }}
       }}
     }}
@@ -74,20 +81,21 @@ pipeline {{
 
   post {{
     success {{
-      echo "Successfully pushed ${{params.SERVICE_NAME}}:$IMAGE_TAG to ECR"
+      echo "Successfully pushed ${{params.SERVICE_NAME}} to ECR"
     }}
     failure {{
-      echo "Failed to push ${{params.SERVICE_NAME}}:$IMAGE_TAG"
+      echo "Failed to push ${{params.SERVICE_NAME}}"
     }}
   }}
 }}
 """
 
+# generate Jenkinsfile for every services
 for name in services:
     folder = Path(f"./spring-petclinic-{name}")
     if folder.exists():
         jenkinsfile = folder / "Jenkinsfile"
         jenkinsfile.write_text(jenkinsfile_template.format(name=name))
-        print(f"Created Jenkinsfile: {jenkinsfile}")
+        print(f"Created: {jenkinsfile}")
     else:
         print(f"older not found: {folder}")
