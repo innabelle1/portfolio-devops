@@ -36,7 +36,7 @@ pipeline {{
 
     stage('Checkout') {{
       steps {{
-        git url: 'https://github.com/innabelle1/portfolio-devops.git'
+        git branch: 'restore-devops', url: 'https://github.com/innabelle1/portfolio-devops.git'
       }}
     }}
 
