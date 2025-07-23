@@ -2,31 +2,41 @@ pipeline {
   agent any
 
   parameters {
-    string(name: 'SERVICE_NAME', defaultValue: 'genai-service', description: 'Name of the microservice')
-    string(name: 'IMAGE_TAG', defaultValue: '', description: 'Leave empty to use BUILD_NUMBER')
+    string(name: 'SERVICE_NAME', defaultValue: 'genai-service', description: 'Microservice name')
+    string(name: 'IMAGE_TAG', defaultValue: 'latest', description: 'Docker image tag')
   }
 
   environment {
-    AWS_REGION      = 'us-east-1'
-    ECR_REGISTRY    = '701173654142.dkr.ecr.us-east-1.amazonaws.com'
-    ECR_REPO        = "${ECR_REGISTRY}/petclinic/${params.SERVICE_NAME}"
-    IMAGE_TAG       = "${params.IMAGE_TAG ?: env.BUILD_NUMBER}"
-    LOCAL_IMAGE     = "portfolio-devops-${params.SERVICE_NAME}:latest"
+    AWS_REGION   = 'us-east-1'
+    ECR_REGISTRY = '701173654142.dkr.ecr.us-east-1.amazonaws.com'
+    ECR_REPO     = "${ECR_REGISTRY}/petclinic/${params.SERVICE_NAME}"
+    LOCAL_IMAGE  = "portfolio-devops-${params.SERVICE_NAME}:${params.IMAGE_TAG}"
   }
 
   stages {
+
     stage('Checkout') {
       steps {
         git branch: 'restore-devops', url: 'https://github.com/innabelle1/portfolio-devops.git'
       }
     }
 
-    stage('Tag Local Image for ECR') {
+    stage('Verify Local Image Exists') {
       steps {
         script {
-          echo "Tagging $LOCAL_IMAGE -> $ECR_REPO:$IMAGE_TAG"
-          sh "docker tag $LOCAL_IMAGE $ECR_REPO:$IMAGE_TAG"
+          def exists = sh(script: "docker image inspect $LOCAL_IMAGE > /dev/null 2>&1", returnStatus: true) == 0
+          if (!exists) {
+            error "Local image not found: $LOCAL_IMAGE"
+          } else {
+            echo "Found local image: $LOCAL_IMAGE"
+          }
         }
+      }
+    }
+
+    stage('Tag Image for ECR') {
+      steps {
+        sh "docker tag $LOCAL_IMAGE $ECR_REPO:${params.IMAGE_TAG}"
       }
     }
 
@@ -38,26 +48,23 @@ pipeline {
       }
     }
 
-    stage('Push Image to ECR') {
+    stage('Push to ECR') {
       steps {
-        sh "docker push $ECR_REPO:$IMAGE_TAG"
+        sh "docker push $ECR_REPO:${params.IMAGE_TAG}"
       }
     }
 
-    stage('Verify Push') {
+    stage('Verify Image in ECR') {
       steps {
         script {
-          def check = sh(
-            script: """aws ecr describe-images \
-              --repository-name petclinic/${params.SERVICE_NAME} \
-              --image-ids imageTag=$IMAGE_TAG \
-              --region $AWS_REGION > /dev/null 2>&1""",
+          def result = sh(
+            script: "aws ecr describe-images --repository-name petclinic/${params.SERVICE_NAME} --image-ids imageTag=${params.IMAGE_TAG} --region $AWS_REGION",
             returnStatus: true
           )
-          if (check != 0) {
-            error("ECR image not found after push: petclinic/${params.SERVICE_NAME}:$IMAGE_TAG")
+          if (result != 0) {
+            error "Image not found in ECR: petclinic/${params.SERVICE_NAME}:${params.IMAGE_TAG}"
           } else {
-            echo "Image verified in ECR: petclinic/${params.SERVICE_NAME}:$IMAGE_TAG"
+            echo "Image exists in ECR"
           }
         }
       }
@@ -66,7 +73,7 @@ pipeline {
 
   post {
     success {
-      echo "Successfully pushed ${params.SERVICE_NAME} to ECR"
+      echo "Pushed ${params.SERVICE_NAME} successfully to ECR"
     }
     failure {
       echo "Failed to push ${params.SERVICE_NAME}"
