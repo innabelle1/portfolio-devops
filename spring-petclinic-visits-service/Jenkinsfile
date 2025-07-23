@@ -10,7 +10,8 @@ pipeline {
     AWS_REGION   = 'us-east-1'
     ECR_REGISTRY = '701173654142.dkr.ecr.us-east-1.amazonaws.com'
     ECR_REPO     = "${ECR_REGISTRY}/petclinic/${params.SERVICE_NAME}"
-    LOCAL_IMAGE  = "portfolio-devops-${params.SERVICE_NAME}:${params.IMAGE_TAG}"
+    IMAGE_TAG    = "${params.IMAGE_TAG ?: 'latest'}"
+    LOCAL_IMAGE  = "portfolio-devops-${params.SERVICE_NAME}:${IMAGE_TAG}"
   }
 
   stages {
