@@ -12,6 +12,9 @@
 .idea/
 .DS_Store
 
+.env.jenkins
+jenkins/.env.jenkins
+
 !.env.example.openai
 !.env.example.bedrock
 # Allow lockfile
