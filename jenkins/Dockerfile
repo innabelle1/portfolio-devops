@@ -1,7 +1,10 @@
 FROM jenkins/jenkins:lts
 
 USER root
-RUN apt-get update && apt-get install -y curl
+RUN apt-get update && \
+    apt-get install -y curl unzip gnupg awscli && \
+    curl -fsSL https://get.docker.com | sh && \
+    usermod -aG docker jenkins
 
 # Install plugins
 COPY plugins.txt /usr/share/jenkins/ref/plugins.txt
