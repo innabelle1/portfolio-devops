@@ -18,14 +18,14 @@ pipeline {{
 
   parameters {{
     string(name: 'SERVICE_NAME', defaultValue: '{name}', description: 'Microservice name')
-    string(name: 'IMAGE_TAG', defaultValue: 'latest', description: 'Docker image tag')
+    string(name: 'IMAGE_TAG', defaultValue: '', description: 'Docker image tag (leave empty to use BUILD_NUMBER)')
   }}
 
   environment {{
     AWS_REGION   = 'us-east-1'
     ECR_REGISTRY = '701173654142.dkr.ecr.us-east-1.amazonaws.com'
     ECR_REPO     = "${{ECR_REGISTRY}}/petclinic/${{params.SERVICE_NAME}}"
-    IMAGE_TAG    = "${{params.IMAGE_TAG ?: 'latest'}}"
+    IMAGE_TAG    = "${{params.IMAGE_TAG ?: env.BUILD_NUMBER}}"
     LOCAL_IMAGE  = "portfolio-devops-${{params.SERVICE_NAME}}:${{IMAGE_TAG}}"
   }}
 
