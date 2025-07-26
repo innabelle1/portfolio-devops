@@ -1,16 +1,12 @@
 pipeline {
   agent any
 
-  parameters {
-    string(name: 'SERVICE_NAME', defaultValue: 'customers-service', description: 'Microservice name')
-  }
-
   environment {
     AWS_REGION   = 'us-east-1'
     ECR_REGISTRY = '701173654142.dkr.ecr.us-east-1.amazonaws.com'
-    ECR_REPO     = "${ECR_REGISTRY}/petclinic/${params.SERVICE_NAME}"
+    ECR_REPO     = "${ECR_REGISTRY}/petclinic/${SERVICE_NAME}"
     IMAGE_TAG    = "${env.GIT_COMMIT ?: env.BUILD_NUMBER}"
-    LOCAL_IMAGE  = "portfolio-devops-${params.SERVICE_NAME}:${IMAGE_TAG}"
+    LOCAL_IMAGE  = "portfolio-devops-${SERVICE_NAME}:${IMAGE_TAG}"
   }
 
   stages {
@@ -57,11 +53,11 @@ pipeline {
       steps {
         script {
           def result = sh(
-            script: "aws ecr describe-images --repository-name petclinic/${params.SERVICE_NAME} --image-ids imageTag=${params.IMAGE_TAG} --region $AWS_REGION",
+            script: "aws ecr describe-images --repository-name petclinic/${SERVICE_NAME} --image-ids imageTag=${IMAGE_TAG} --region $AWS_REGION",
             returnStatus: true
           )
           if (result != 0) {
-            error "Image not found in ECR: petclinic/${params.SERVICE_NAME}:${params.IMAGE_TAG}"
+            error "Image not found in ECR: petclinic/${params.SERVICE_NAME}:${IMAGE_TAG}"
           } else {
             echo "Image exists in ECR"
           }
@@ -72,10 +68,10 @@ pipeline {
 
   post {
     success {
-      echo "Pushed ${params.SERVICE_NAME} successfully to ECR"
+      echo "Pushed ${SERVICE_NAME} successfully to ECR"
     }
     failure {
-      echo "Failed to push ${params.SERVICE_NAME}"
+      echo "Failed to push ${SERVICE_NAME}"
     }
   }
 }
