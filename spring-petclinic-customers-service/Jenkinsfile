@@ -4,22 +4,17 @@ pipeline {
   environment {
     AWS_REGION   = 'us-east-1'
     ECR_REGISTRY = '701173654142.dkr.ecr.us-east-1.amazonaws.com'
+    SERVICE_NAME = 'customers-service'
+    GIT_COMMIT   = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
+    IMAGE_TAG    = "${GIT_COMMIT}"
     ECR_REPO     = "${ECR_REGISTRY}/petclinic/${SERVICE_NAME}"
-    IMAGE_TAG    = "${GIT_COMMIT ?: BUILD_NUMBER}"
     LOCAL_IMAGE  = "portfolio-devops-${SERVICE_NAME}:${IMAGE_TAG}"
   }
 
   stages {
-
     stage('Checkout') {
       steps {
         git branch: 'restore-devops', url: 'https://github.com/innabelle1/portfolio-devops.git'
-      }
-    }
-
-    stage('Build JAR') {
-      steps {
-        sh "mvn clean package -DskipTests -pl spring-petclinic-${SERVICE_NAME} -am"
       }
     }
 
@@ -29,44 +24,32 @@ pipeline {
       }
     }
 
-    stage('Verify Local Image Exists') {
+    stage('Tag Image for ECR') {
       steps {
-        script {
-          def exists = sh(script: "docker image inspect $LOCAL_IMAGE > /dev/null 2>&1", returnStatus: true) == 0
-          if (!exists) {
-            error "Local image not found: $LOCAL_IMAGE"
-          } else {
-            echo "Found local image: $LOCAL_IMAGE"
-          }
-        }
+        sh "docker tag $LOCAL_IMAGE $ECR_REPO:$IMAGE_TAG"
       }
     }
 
     stage('Login to ECR') {
       steps {
-          withAWS(credentials: 'aws-access', region: "${AWS_REGION}") {
-          sh '''
-            aws ecr get-login-password --region $AWS_REGION |             docker login --username AWS --password-stdin $ECR_REGISTRY
+        withAWS(region: "${AWS_REGION}", credentials: 'aws-access') {
+          sh "aws ecr get-login-password | docker login --username AWS --password-stdin $ECR_REGISTRY"
+        }
+      }
+    }
 
-            docker tag $LOCAL_IMAGE $ECR_REPO:$IMAGE_TAG
-            docker push $ECR_REPO:$IMAGE_TAG
-          '''
-          }
+    stage('Push to ECR') {
+      steps {
+        sh "docker push $ECR_REPO:$IMAGE_TAG"
       }
     }
 
     stage('Verify Image in ECR') {
       steps {
-        script {
-          def result = sh(
-            script: "aws ecr describe-images --repository-name petclinic/${SERVICE_NAME} --image-ids imageTag=${IMAGE_TAG} --region $AWS_REGION",
-            returnStatus: true
-          )
-          if (result != 0) {
-            error "Image not found in ECR: petclinic/${params.SERVICE_NAME}:${IMAGE_TAG}"
-          } else {
-            echo "Image exists in ECR"
-          }
+        withAWS(region: "${AWS_REGION}", credentials: 'aws-access') {
+          sh '''
+            aws ecr describe-images               --repository-name petclinic/${SERVICE_NAME}               --image-ids imageTag=${IMAGE_TAG}               --region $AWS_REGION
+          '''
         }
       }
     }
@@ -74,7 +57,7 @@ pipeline {
 
   post {
     success {
-      echo "Pushed ${SERVICE_NAME} successfully to ECR"
+      echo "Pushed ${SERVICE_NAME} to ECR as $IMAGE_TAG"
     }
     failure {
       echo "Failed to push ${SERVICE_NAME}"
