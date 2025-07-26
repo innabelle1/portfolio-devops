@@ -32,6 +32,14 @@ pipeline {{
       }}
     }}
 
+
+    stage('Build JAR') {{
+      steps {{
+        sh "mvn clean package -DskipTests -pl spring-petclinic-${{SERVICE_NAME}} -am"
+      }}
+    }}
+
+
     stage('Build Docker Image') {{
       steps {{
         sh "docker build -t $LOCAL_IMAGE -f spring-petclinic-${{SERVICE_NAME}}/Dockerfile ."
