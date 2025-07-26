@@ -79,8 +79,8 @@ pipeline {{
               --region $AWS_REGION
           '''
          }}
+      }}
     }}
-  }}
 
   post {{
     success {{
