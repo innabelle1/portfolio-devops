@@ -16,21 +16,17 @@ jenkinsfile_template = """\
 pipeline {{
   agent any
 
-  parameters {{
-    string(name: 'SERVICE_NAME', defaultValue: '{name}', description: 'Microservice name')
-    string(name: 'GIT_COMMIT', defaultValue: 'latest', description: 'Git commit SHA or tag')
-  }}
-
   environment {{
     AWS_REGION   = 'us-east-1'
     ECR_REGISTRY = '701173654142.dkr.ecr.us-east-1.amazonaws.com'
-    SERVICE_NAME = "${{params.SERVICE_NAME}}"
-    IMAGE_TAG    = "${{params.GIT_COMMIT}}"
+    SERVICE_NAME = '{name}'
+    IMAGE_TAG    = "${{env.GIT_COMMIT ?: 'latest'}}"
     ECR_REPO     = "${{ECR_REGISTRY}}/petclinic/${{SERVICE_NAME}}"
     LOCAL_IMAGE  = "portfolio-devops-${{SERVICE_NAME}}:${{IMAGE_TAG}}"
   }}
 
   stages {{
+
     stage('Checkout') {{
       steps {{
         git branch: 'restore-devops', url: 'https://github.com/innabelle1/portfolio-devops.git'
@@ -79,10 +75,10 @@ pipeline {{
 
   post {{
     success {{
-      echo "Pushed ${{SERVICE_NAME}} successfully to ECR as $IMAGE_TAG"
+      echo "✅ Pushed ${{SERVICE_NAME}} successfully to ECR as $IMAGE_TAG"
     }}
     failure {{
-      echo "Failed to push ${{SERVICE_NAME}}"
+      echo "❌ Failed to push ${{SERVICE_NAME}}"
     }}
   }}
 }}"""
