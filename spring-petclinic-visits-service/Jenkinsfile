@@ -5,7 +5,7 @@ pipeline {
     AWS_REGION   = 'us-east-1'
     ECR_REGISTRY = '701173654142.dkr.ecr.us-east-1.amazonaws.com'
     ECR_REPO     = "${ECR_REGISTRY}/petclinic/${SERVICE_NAME}"
-    IMAGE_TAG    = "${env.GIT_COMMIT ?: env.BUILD_NUMBER}"
+    IMAGE_TAG    = "${GIT_COMMIT ?: BUILD_NUMBER}"
     LOCAL_IMAGE  = "portfolio-devops-${SERVICE_NAME}:${IMAGE_TAG}"
   }
 
@@ -14,6 +14,12 @@ pipeline {
     stage('Checkout') {
       steps {
         git branch: 'restore-devops', url: 'https://github.com/innabelle1/portfolio-devops.git'
+      }
+    }
+
+    stage('Build JAR') {
+      steps {
+        sh "mvn clean package -DskipTests -pl spring-petclinic-${SERVICE_NAME} -am"
       }
     }
 
