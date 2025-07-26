@@ -18,19 +18,18 @@ pipeline {{
 
   parameters {{
     string(name: 'SERVICE_NAME', defaultValue: '{name}', description: 'Microservice name')
-    string(name: 'GIT_COMMIT', defaultValue: '', description: 'Git commit SHA or tag')
   }}
 
   environment {{
     AWS_REGION   = 'us-east-1'
     ECR_REGISTRY = '701173654142.dkr.ecr.us-east-1.amazonaws.com'
-    SERVICE_NAME = "${name}"
-    IMAGE_TAG    = "${{params.GIT_COMMIT ?: 'latest'}}"
-    ECR_REPO     = "${{ECR_REGISTRY}}/petclinic/${{SERVICE_NAME}}"
-    LOCAL_IMAGE  = "portfolio-devops-${{SERVICE_NAME}}:${{IMAGE_TAG}}"
+    ECR_REPO     = "${{ECR_REGISTRY}}/petclinic/${{params.SERVICE_NAME}}"
+    IMAGE_TAG    = "${env.GIT_COMMIT ?: env.BUILD_NUMBER}"
+    LOCAL_IMAGE  = "portfolio-devops-${{params.SERVICE_NAME}}:${{IMAGE_TAG}}"
   }}
 
   stages {{
+
     stage('Checkout') {{
       steps {{
         git branch: 'restore-devops', url: 'https://github.com/innabelle1/portfolio-devops.git'
@@ -43,35 +42,45 @@ pipeline {{
       }}
     }}
 
-    stage('Tag Image for ECR') {{
+    stage('Verify Local Image Exists') {{
       steps {{
-        sh "docker tag $LOCAL_IMAGE $ECR_REPO:$IMAGE_TAG"
+        script {{
+          def exists = sh(script: "docker image inspect $LOCAL_IMAGE > /dev/null 2>&1", returnStatus: true) == 0
+          if (!exists) {{
+            error "Local image not found: $LOCAL_IMAGE"
+          }} else {{
+            echo "Found local image: $LOCAL_IMAGE"
+          }}
+        }}
       }}
     }}
 
     stage('Login to ECR') {{
       steps {{
-        withAWS(region: "${{AWS_REGION}}", credentials: 'aws-access') {{
-          sh "aws ecr get-login-password | docker login --username AWS --password-stdin $ECR_REGISTRY"
-        }}
-      }}
-    }}
+          withAWS(credentials: 'aws-access', region: "${{AWS_REGION}}") {{
+          sh '''
+            aws ecr get-login-password --region $AWS_REGION | \
+            docker login --username AWS --password-stdin $ECR_REGISTRY
 
-    stage('Push to ECR') {{
-      steps {{
-        sh "docker push $ECR_REPO:$IMAGE_TAG"
+            docker tag $LOCAL_IMAGE $ECR_REPO:$IMAGE_TAG
+            docker push $ECR_REPO:$IMAGE_TAG
+          '''
+          }}
       }}
     }}
 
     stage('Verify Image in ECR') {{
       steps {{
-        withAWS(region: "${{AWS_REGION}}", credentials: 'aws-access') {{
-          sh '''
-            aws ecr describe-images \
-              --repository-name petclinic/${{SERVICE_NAME}} \
-              --image-ids imageTag=${{IMAGE_TAG}} \
-              --region $AWS_REGION
-          '''
+        script {{
+          def result = sh(
+            script: "aws ecr describe-images --repository-name petclinic/${{params.SERVICE_NAME}} --image-ids imageTag=${{params.IMAGE_TAG}} --region $AWS_REGION",
+            returnStatus: true
+          )
+          if (result != 0) {{
+            error "Image not found in ECR: petclinic/${{params.SERVICE_NAME}}:${{params.IMAGE_TAG}}"
+          }} else {{
+            echo "Image exists in ECR"
+          }}
         }}
       }}
     }}
@@ -79,13 +88,14 @@ pipeline {{
 
   post {{
     success {{
-      echo "Pushed ${{SERVICE_NAME}} successfully to ECR as $IMAGE_TAG"
+      echo "Pushed ${{params.SERVICE_NAME}} successfully to ECR"
     }}
     failure {{
-      echo "Failed to push ${{SERVICE_NAME}}"
+      echo "Failed to push ${{params.SERVICE_NAME}}"
     }}
   }}
-}}"""
+}}
+"""
 
 # generate Jenkinsfile for every services
 for name in services:

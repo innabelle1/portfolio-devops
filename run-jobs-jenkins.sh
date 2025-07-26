@@ -3,8 +3,9 @@
 JENKINS_URL="http://localhost:8080"
 JENKINS_USER="admin"
 JENKINS_TOKEN="admin123"
-JENKINS_CLI="./jenkins-cli.jar"
+JENKINS_CLI_JAR="./jenkins-cli.jar"
 
+# list services
 services=(
   "config-server"
   "discovery-server"
@@ -16,27 +17,20 @@ services=(
   "admin-server"
 )
 
-# git commit
-GIT_COMMIT=$(git rev-parse HEAD)
-echo "Current GIT_COMMIT: $GIT_COMMIT"
-echo
-
-# check Jenkins CLI
-if [ ! -f "$JENKINS_CLI" ]; then
-  echo "Downloading jenkins-cli.jar..."
-  curl -sSL "$JENKINS_URL/jnlpJars/jenkins-cli.jar" -o "$JENKINS_CLI"
+# check CLI
+if [ ! -f "$JENKINS_CLI_JAR" ]; then
+  echo "jenkins-cli.jar not found:"
+  echo "$JENKINS_URL/jnlpJars/jenkins-cli.jar"
+  exit 1
 fi
 
-# run pipelines
+# run jobs
 for service in "${services[@]}"; do
-  echo "Run pipeline for: petclinic-$service"
+  echo "run jobs for: petclinic-${service}"
 
-  java -jar "$JENKINS_CLI" -s "$JENKINS_URL" -auth "$JENKINS_USER:$JENKINS_TOKEN" \
-    build "petclinic-$service" \
-    -p "SERVICE_NAME=$service" \
-    -p "GIT_COMMIT=$GIT_COMMIT" \
-    -w || echo "Run failure: petclinic-$service"
-
+  java -jar "$JENKINS_CLI_JAR" -s "$JENKINS_URL" -auth "$JENKINS_USER:$JENKINS_TOKEN" \
+    build "petclinic-${service}" \
+    -w || echo "Failure: petclinic-${service}"
 done
 
-echo "All pipeline's are running with tag: $GIT_COMMIT"
+echo "all pipelines in  Jenkins"
