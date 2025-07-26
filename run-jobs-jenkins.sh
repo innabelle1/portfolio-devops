@@ -2,7 +2,7 @@
 
 JENKINS_URL="http://localhost:8080"
 JENKINS_USER="admin"
-JENKINS_TOKEN="your_token_here"
+JENKINS_TOKEN="admin123"
 JENKINS_CLI="./jenkins-cli.jar"
 
 services=(
