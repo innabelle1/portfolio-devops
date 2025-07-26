@@ -24,7 +24,7 @@ pipeline {{
     AWS_REGION   = 'us-east-1'
     ECR_REGISTRY = '701173654142.dkr.ecr.us-east-1.amazonaws.com'
     ECR_REPO     = "${{ECR_REGISTRY}}/petclinic/${{params.SERVICE_NAME}}"
-    IMAGE_TAG    = "${{env.GIT_COMMIT ?: env.BUILD_NUMBER}}"
+    IMAGE_TAG    = "${env.GIT_COMMIT ?: env.BUILD_NUMBER}"
     LOCAL_IMAGE  = "portfolio-devops-${{params.SERVICE_NAME}}:${{IMAGE_TAG}}"
   }}
 
@@ -33,6 +33,12 @@ pipeline {{
     stage('Checkout') {{
       steps {{
         git branch: 'restore-devops', url: 'https://github.com/innabelle1/portfolio-devops.git'
+      }}
+    }}
+
+    stage('Build Docker Image') {{
+      steps {{
+        sh "docker build -t $LOCAL_IMAGE -f spring-petclinic-${{SERVICE_NAME}}/Dockerfile ."
       }}
     }}
 
@@ -65,16 +71,20 @@ pipeline {{
 
     stage('Verify Image in ECR') {{
       steps {{
-         withAWS(region: "${{AWS_REGION}}", credentials: 'aws-access') {{
-          sh '''
-            aws ecr describe-images \
-              --repository-name petclinic/${{SERVICE_NAME}} \
-              --image-ids imageTag=${{IMAGE_TAG}} \
-              --region $AWS_REGION
-          '''
-         }}
+        script {{
+          def result = sh(
+            script: "aws ecr describe-images --repository-name petclinic/${{params.SERVICE_NAME}} --image-ids imageTag=${{params.IMAGE_TAG}} --region $AWS_REGION",
+            returnStatus: true
+          )
+          if (result != 0) {{
+            error "Image not found in ECR: petclinic/${{params.SERVICE_NAME}}:${{params.IMAGE_TAG}}"
+          }} else {{
+            echo "Image exists in ECR"
+          }}
+        }}
       }}
     }}
+  }}
 
   post {{
     success {{
