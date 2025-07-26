@@ -9,7 +9,7 @@ pipeline {
   environment {
     AWS_REGION   = 'us-east-1'
     ECR_REGISTRY = '701173654142.dkr.ecr.us-east-1.amazonaws.com'
-    SERVICE_NAME = "${name}"
+    SERVICE_NAME = "$vets-service"
     IMAGE_TAG    = "${params.GIT_COMMIT ?: 'latest'}"
     ECR_REPO     = "${ECR_REGISTRY}/petclinic/${SERVICE_NAME}"
     LOCAL_IMAGE  = "portfolio-devops-${SERVICE_NAME}:${IMAGE_TAG}"
