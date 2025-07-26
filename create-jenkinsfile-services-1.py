@@ -36,12 +36,6 @@ pipeline {{
       }}
     }}
 
-    stage('Build Docker Image') {{
-      steps {{
-        sh "docker build -t $LOCAL_IMAGE -f spring-petclinic-${{SERVICE_NAME}}/Dockerfile ."
-      }}
-    }}
-
     stage('Verify Local Image Exists') {{
       steps {{
         script {{
