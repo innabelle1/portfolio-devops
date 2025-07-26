@@ -3,13 +3,14 @@ pipeline {
 
   parameters {
     string(name: 'SERVICE_NAME', defaultValue: 'discovery-server', description: 'Microservice name')
+    string(name: 'IMAGE_TAG', defaultValue: 'latest', description: 'Docker image tag')
   }
 
   environment {
     AWS_REGION   = 'us-east-1'
     ECR_REGISTRY = '701173654142.dkr.ecr.us-east-1.amazonaws.com'
     ECR_REPO     = "${ECR_REGISTRY}/petclinic/${params.SERVICE_NAME}"
-    IMAGE_TAG = "${GIT_COMMIT}"
+    IMAGE_TAG    = "${params.IMAGE_TAG ?: latest}"
     LOCAL_IMAGE  = "portfolio-devops-${params.SERVICE_NAME}:${IMAGE_TAG}"
   }
 
@@ -44,7 +45,7 @@ pipeline {
       steps {
           withAWS(credentials: 'aws-access', region: "${AWS_REGION}") {
           sh '''
-            aws ecr get-login-password --region $AWS_REGION |               docker login --username AWS --password-stdin $ECR_REGISTRY
+            aws ecr get-login-password --region $AWS_REGION |             docker login --username AWS --password-stdin $ECR_REGISTRY
 
             docker tag $LOCAL_IMAGE $ECR_REPO:$IMAGE_TAG
             docker push $ECR_REPO:$IMAGE_TAG
