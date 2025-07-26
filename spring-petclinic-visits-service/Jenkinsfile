@@ -21,6 +21,12 @@ pipeline {
       }
     }
 
+    stage('Build Docker Image') {
+      steps {
+        sh "docker build -t $LOCAL_IMAGE -f spring-petclinic-${SERVICE_NAME}/Dockerfile ."
+      }
+    }
+
     stage('Verify Local Image Exists') {
       steps {
         script {
@@ -49,13 +55,20 @@ pipeline {
 
     stage('Verify Image in ECR') {
       steps {
-         withAWS(region: "${AWS_REGION}", credentials: 'aws-access') {
-          sh '''
-            aws ecr describe-images               --repository-name petclinic/${SERVICE_NAME}               --image-ids imageTag=${IMAGE_TAG}               --region $AWS_REGION
-          '''
-         }
+        script {
+          def result = sh(
+            script: "aws ecr describe-images --repository-name petclinic/${params.SERVICE_NAME} --image-ids imageTag=${params.IMAGE_TAG} --region $AWS_REGION",
+            returnStatus: true
+          )
+          if (result != 0) {
+            error "Image not found in ECR: petclinic/${params.SERVICE_NAME}:${params.IMAGE_TAG}"
+          } else {
+            echo "Image exists in ECR"
+          }
+        }
       }
     }
+  }
 
   post {
     success {

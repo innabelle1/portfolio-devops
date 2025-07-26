@@ -24,7 +24,7 @@ pipeline {{
     AWS_REGION   = 'us-east-1'
     ECR_REGISTRY = '701173654142.dkr.ecr.us-east-1.amazonaws.com'
     ECR_REPO     = "${{ECR_REGISTRY}}/petclinic/${{params.SERVICE_NAME}}"
-    IMAGE_TAG    = "${env.GIT_COMMIT ?: env.BUILD_NUMBER}"
+    IMAGE_TAG    = "${{env.GIT_COMMIT ?: env.BUILD_NUMBER}}"
     LOCAL_IMAGE  = "portfolio-devops-${{params.SERVICE_NAME}}:${{IMAGE_TAG}}"
   }}
 
